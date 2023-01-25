@@ -1,14 +1,14 @@
 name: charmed-kafka
 base: core22
-version: '3.1.2'
+version: '3.3.2'
 summary: Apache Kafka is a distributed streaming platform
 description: |
     Kafka is generally used for two broad classes of applications:
     - Building real-time streaming data pipelines that reliably get data between systems or applications
     - Building real-time streaming applications that transform or react to the streams of data 
 
-grade: devel
-confinement: devmode
+grade: stable
+confinement: strict
 
 environment:
   JAVA_HOME: $SNAP/usr/lib/jvm/java-17-openjdk-amd64
