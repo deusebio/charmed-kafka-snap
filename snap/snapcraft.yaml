@@ -1,0 +1,154 @@
+name: charmed-kafka
+base: core22
+version: '3.1.2'
+summary: Apache Kafka is a distributed streaming platform
+description: |
+    Kafka is generally used for two broad classes of applications:
+    - Building real-time streaming data pipelines that reliably get data between systems or applications
+    - Building real-time streaming applications that transform or react to the streams of data 
+
+grade: devel
+confinement: devmode
+
+environment:
+  JAVA_HOME: $SNAP/usr/lib/jvm/java-17-openjdk-amd64
+  PATH: $JAVA_HOME/bin:$PATH
+
+apps:
+  charmed-kafka:
+    command: start-kafka-wrapper.bash
+    daemon: simple
+    install-mode: disable
+    plugs: [network, network-bind, removable-media]
+  zookeeper:
+    command: start-zookeeper-wrapper.bash
+    daemon: simple
+    install-mode: disable
+    plugs: [network, network-bind, removable-media]
+  configs:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-configs.sh
+  topics:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-topics.sh
+  console-consumer:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-console-consumer.sh
+  console-producer:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-console-producer.sh
+  consumer-groups:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-consumer-groups.sh
+  get-offsets:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-get-offsets.sh
+  reassign-partitions:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-reassign-partitions.sh
+  replica-verification:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-replica-verification.sh
+  zookeeper-shell:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: zookeeper-shell.sh
+  run-class:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-run-class.sh
+  kafka-streams-application-reset:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-streams-application-reset.sh
+  transactions:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-transactions.sh
+  leader-election:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-leader-election.sh
+  dump-log:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-dump-log.sh
+  acls:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-acls.sh
+  cluster:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-cluster.sh
+  verifiable-consumer:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-verifiable-consumer.sh
+  verifiable-producer:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: kafka-verifiable-producer.sh
+  trogdor:
+    command: script-wrapper.bash
+    plugs: [network, network-bind]
+    environment:
+      _wrapper_script: trogdor.sh
+
+parts:
+  dependencies:
+    plugin: nil
+    stage-packages:
+    - openjdk-17-jre-headless
+    - libpsl5
+    - curl
+    override-prime: |
+      snapcraftctl prime
+      rm -vf usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts
+  kafka:
+    plugin: nil
+    override-build: |
+      archive="kafka_2.13-${SNAPCRAFT_PROJECT_VERSION}.tgz"
+      curl -o "${archive}" "https://downloads.apache.org/kafka/${SNAPCRAFT_PROJECT_VERSION}/${archive}"
+      mkdir -p $CRAFT_PART_INSTALL/opt/kafka
+      tar -xzvf "${archive}" -C "${CRAFT_PART_INSTALL}/opt/kafka" --strip-components=1
+  prometheus-exporter:
+    plugin: nil
+    after: [kafka]
+    override-build: |
+      curl -o jmx_prometheus_javaagent.jar "https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.17.0/jmx_prometheus_javaagent-0.17.0.jar"
+      EXPECTED_SHA="48ab23a7514f9de5d2ca0acbb8ed1573b3c2ecbef7c5dc4d37c4ba125e538199"
+      JAR_SHA=$(sha256sum jmx_prometheus_javaagent.jar | cut -d" " -f1)
+      if [ $JAR_SHA != $EXPECTED_SHA ]; then exit 1; fi
+      cp jmx_prometheus_javaagent.jar $CRAFT_PART_INSTALL/
+    organize:
+      jmx_prometheus_javaagent.jar: opt/kafka/extra/jmx_prometheus_javaagent.jar
+  wrapper:
+    plugin: dump
+    source: snap/local
