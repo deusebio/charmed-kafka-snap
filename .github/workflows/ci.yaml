@@ -1,0 +1,63 @@
+name: Build and Test
+
+on:
+  workflow_call:
+    outputs:
+      snap:
+        description: "Filename of the built snap artifact"
+        value: local-${{ jobs.build.outputs.snap }}
+
+jobs:
+  build:
+    name: Build Snap
+    runs-on: ubuntu-latest
+    outputs:
+      snap-file: ${{ steps.snapcraft.outputs.snap }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Upgrade linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get upgrade --yes
+
+      - name: Build snap
+        uses: snapcore/action-build@v1
+        id: snapcraft
+
+      - name: Upload built snap job artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: local-${{ steps.snapcraft.outputs.snap }}
+          path: ${{ steps.snapcraft.outputs.snap }}
+
+  test:
+    name: Test Snap
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download snap file
+        uses: actions/download-artifact@v3
+        with:
+          name: local-${{ needs.build.outputs.snap }}
+          path: .
+
+      - name: Install snap file
+        run: |
+          sudo snap install --dangerous ${{ needs.build.outputs.snap }}
+          sudo systemctl status snap.charmed-kafka.charmed-kafka
+          status=$?
+      - name: Connect required interfaces
+        run: |
+          sudo snap connect charmed-kafka:removable-media
+      - name: Start Charmed-Kafka
+        run: |
+          sudo snap start charmed-kafka
+      - name: Check topic creation
+        run: |
+          topic_creation=$(charmed-kafka.topics --create --topic test --bootstrap-server localhost:9092)
+          if [ "$topic_creation" != "Created topic test.\n" ]; then
+              exit 1
+          fi
