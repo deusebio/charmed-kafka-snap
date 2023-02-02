@@ -150,5 +150,11 @@ parts:
     organize:
       jmx_prometheus_javaagent.jar: opt/kafka/extra/jmx_prometheus_javaagent.jar
   wrapper:
-    plugin: dump
-    source: snap/local
+    # plugin: dump
+    # source: snap/local
+    plugin: nil
+    source: .
+    source-type: local
+    override-build: |
+      cp -r snap/local/* $CRAFT_PART_INSTALL/.
+      chmod 755 $CRAFT_PART_INSTALL/*.bash
