@@ -21,7 +21,7 @@ export LOG_DIR="${SNAP_COMMON}/log"
 JMX_EXPORTER_PATH="${SNAP}/opt/kafka/extra/jmx_prometheus_javaagent.jar"
 JMX_EXPORTER_CONF="${SNAP}/opt/kafka/default-config/jmx_prometheus.yaml"
 JMX_PORT="9101"
-export KAFKA_OPTS="${KAFKA_OPTS:+$KAFKA_OPTS:}-javaagent:${JMX_EXPORTER_PATH}=${JMX_PORT}:${JMX_EXPORTER_CONF}"
+export KAFKA_OPTS="${KAFKA_OPTS:+$KAFKA_OPTS }-javaagent:${JMX_EXPORTER_PATH}=${JMX_PORT}:${JMX_EXPORTER_CONF}"
 
 if [ -e "${SNAP_COMMON}/broker.env" ]; then
 	. "${SNAP_COMMON}/broker.env"
