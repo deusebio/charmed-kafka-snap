@@ -17,6 +17,8 @@ jobs:
       - id: checkout
         name: Checkout repository
         uses: actions/checkout@v3
+        run: |
+          ls -la snap/local/
 
       - id: dependencies 
         name: Upgrade linux deps
