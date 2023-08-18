@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - '[0-9]/[a-z]+'
+      - '3/[a-z]+'
   workflow_call:
   workflow_dispatch:
 
