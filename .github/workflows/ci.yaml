@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: charmed-kafka_snap_amd64
-          path: charmed-kafka_${{ steps.get-version.output.version }}_amd64.snap
+          path: charmed-kafka_${{ steps.get-version.outputs.version }}_amd64.snap
     outputs:
       snap-file: ${{ steps.snapcraft.outputs.snap }}
       version: ${{ steps.get-version.outputs.version }}
