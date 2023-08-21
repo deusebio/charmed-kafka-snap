@@ -6,6 +6,31 @@ on:
   workflow_dispatch:
 
 jobs:
+  checks:
+    name: Publish Snap
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: get-current-version
+        name: Retrieve Metadata
+        run: |
+          VERSION=$(yq '(.version|split("-"))[0]' snap/snapcraft.yaml)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          
+          BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "risk=${BRANCH##*\/}" >> $GITHUB_OUTPUT
+          echo "track=${BRANCH%*\/*}" >> $GITHUB_OUTPUT    
+
+      - name: Check consistency between metadata and release branch
+        run: |
+          MAJOR_VERSION=$(echo ${{ steps.get-current-version.outputs.version }} | sed -n "s/\(^[0-9]*\).*/\1/p")
+          if [ "${MAJOR_VERSION}" != "${{ steps.get-current-version.outputs.track }}" ]; then exit 1; fi
+        continue-on-error: false
+
   build:
     name: Build snap
     uses: canonical/data-platform-workflows/.github/workflows/build_snap_without_cache.yaml@v2

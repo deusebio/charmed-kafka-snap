@@ -26,11 +26,16 @@ jobs:
         run: |
           VERSION=$(yq '(.version|split("-"))[0]' snap/snapcraft.yaml)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          
+          BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "risk=${BRANCH##*\/}" >> $GITHUB_OUTPUT
+          echo "track=${BRANCH%*\/*}" >> $GITHUB_OUTPUT    
 
       - id: check-latest-version
         name: Check latest stable Kafka version available for download
         run: |
-          LATEST_STABLE_SPARK_VERSION=$(curl --silent https://downloads.apache.org/kafka/ | grep  "\[DIR\]" | cut -d'>' -f3 | cut -d'/' -f1  | sort | tail -n 1)
+          LATEST_STABLE_SPARK_VERSION=$(curl --silent https://downloads.apache.org/kafka/ | grep  "\[DIR\]" | cut -d'>' -f3 | cut -d'/' -f1  | grep "^${{ steps.get-current-version.outputs.track }}" | sort | tail -n 1)
           CURRENT_PUBLISHED_VERSION=${{ steps.get-current-version.outputs.version }}
           STATUSCODE=$(curl --silent --head https://downloads.apache.org/kafka/${LATEST_STABLE_SPARK_VERSION}/kafka_2.13-${LATEST_STABLE_SPARK_VERSION}.tgz | head -n 1 | cut -d' ' -f2)
           if  [[ ${LATEST_STABLE_SPARK_VERSION} != ${CURRENT_PUBLISHED_VERSION} ]] && [[ ${STATUSCODE} -eq 200 ]]
