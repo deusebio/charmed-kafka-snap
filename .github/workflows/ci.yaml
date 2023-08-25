@@ -1,8 +1,5 @@
 name: Build and Test
 
-env:
-  VERSION: 3.3.2
-
 on:
   workflow_dispatch:
   pull_request:
@@ -11,8 +8,6 @@ jobs:
   build:
     name: Build Snap
     runs-on: ubuntu-latest
-    outputs:
-      snap-file: ${{ steps.snapcraft.outputs.snap }}
     steps:
       - id: checkout
         name: Checkout repository
@@ -26,6 +21,12 @@ jobs:
           sudo apt-mark hold grub-efi-amd64-signed grub-efi-amd64-bin
           sudo DEBIAN_FRONTEND=noninteractive apt upgrade --yes
 
+      - id: get-version
+        name: Retrieve workload version
+        run: |
+          VERSION=$(yq '(.version|split("-"))[0]' snap/snapcraft.yaml)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
       - id: snapcraft
         name: Build snap
         uses: snapcore/action-build@v1
@@ -35,7 +36,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: charmed-kafka_snap_amd64
-          path: charmed-kafka_${{env.VERSION}}_amd64.snap
+          path: charmed-kafka_${{ steps.get-version.outputs.version }}_amd64.snap
+    outputs:
+      snap-file: ${{ steps.snapcraft.outputs.snap }}
+      version: ${{ steps.get-version.outputs.version }}
 
   test:
     name: Test Snap
@@ -51,7 +55,7 @@ jobs:
 
       - name: Install snap file
         run: |
-          sudo snap install charmed-kafka_${{env.VERSION}}_amd64.snap --dangerous
+          sudo snap install charmed-kafka_${{ needs.build.outputs.version }}_amd64.snap --dangerous
           sudo snap install charmed-zookeeper --channel=3/edge
 
       - name: Set default config
