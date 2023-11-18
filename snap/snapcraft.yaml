@@ -29,7 +29,7 @@ slots:
 
 apps:
   daemon:
-    command: opt/kafka/start-wrapper.bash
+    command: opt/kafka/bin/start-wrapper.bash
     daemon: simple
     install-mode: disable
     plugs:
@@ -37,161 +37,161 @@ apps:
       - network-bind
       - removable-media
   log-dirs:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-log-dirs.sh
   storage:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: storage.sh
   consumer-perf-test:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-consumer-perf-test.sh
   producer-perf-test:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-producer-perf-test.sh
   configs:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-configs.sh
   topics:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-topics.sh
   console-consumer:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-console-consumer.sh
   console-producer:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-console-producer.sh
   consumer-groups:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-consumer-groups.sh
   get-offsets:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-get-offsets.sh
   reassign-partitions:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-reassign-partitions.sh
   replica-verification:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-replica-verification.sh
   zookeeper-shell:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: zookeeper-shell.sh
   run-class:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-run-class.sh
   kafka-streams-application-reset:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-streams-application-reset.sh
   transactions:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-transactions.sh
   leader-election:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-leader-election.sh
   dump-log:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-dump-log.sh
   acls:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-acls.sh
   cluster:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-cluster.sh
   verifiable-consumer:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-verifiable-consumer.sh
   verifiable-producer:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
     environment:
       bin_script: kafka-verifiable-producer.sh
   trogdor:
-    command: opt/kafka/bin-wrapper.bash
+    command: opt/kafka/bin/bin-wrapper.bash
     plugs:
       - network
       - network-bind
@@ -211,11 +211,14 @@ parts:
     - curl
     override-build: |
       snapcraftctl build
-      cp -r ./* $SNAPCRAFT_PART_INSTALL
+
+      mkdir -p $SNAPCRAFT_PART_INSTALL/opt/kafka
+      mkdir -p $SNAPCRAFT_PART_INSTALL/opt/kafka/plugins
+
+      cp -r ./* $SNAPCRAFT_PART_INSTALL/opt/kafka
     override-prime: |
       snapcraftctl prime
       rm -vf usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts
-      mkdir -p $SNAPCRAFT_PART_INSTALL/opt/kafka
   prometheus-exporter:
     plugin: nil
     after: [kafka]
@@ -226,7 +229,8 @@ parts:
       if [ $JAR_SHA != $EXPECTED_SHA ]; then exit 1; fi
       cp jmx_prometheus_javaagent.jar $SNAPCRAFT_PART_INSTALL/
     organize:
-      jmx_prometheus_javaagent.jar: opt/kafka/jmx_prometheus_javaagent.jar
+      jmx_prometheus_javaagent.jar: opt/kafka/plugins/jmx_prometheus_javaagent.jar
+
   wrapper:
     plugin: dump
     source: snap/local
