@@ -226,7 +226,8 @@ apps:
 parts:
   kafka:
     plugin: nil
-    source: https://downloads.apache.org/kafka/${SNAPCRAFT_PROJECT_VERSION}/kafka_2.13-${SNAPCRAFT_PROJECT_VERSION}.tgz
+    # source: https://downloads.apache.org/kafka/${SNAPCRAFT_PROJECT_VERSION}/kafka_2.13-${SNAPCRAFT_PROJECT_VERSION}.tgz
+    source: https://archive.apache.org/dist/kafka/3.3.2/kafka_2.13-3.3.2.tgz
     stage-packages:
     - openjdk-17-jre-headless
     - util-linux
